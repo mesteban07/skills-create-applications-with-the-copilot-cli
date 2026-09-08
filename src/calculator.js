@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Node.js CLI calculator supporting only:
+ * Node.js CLI calculator supporting:
  * - addition (+)
  * - subtraction (-)
  * - multiplication (* or x)
  * - division (/)
+ * - modulo (%)
+ * - exponentiation (^ or **)
+ * - square root (sqrt)
  */
 
 function assertNumbers(a, b) {
@@ -37,6 +40,29 @@ function division(a, b) {
   return a / b;
 }
 
+function modulo(a, b) {
+  assertNumbers(a, b);
+  if (b === 0) {
+    throw new RangeError("Cannot calculate a modulo zero.");
+  }
+  return a % b;
+}
+
+function power(base, exponent) {
+  assertNumbers(base, exponent);
+  return base ** exponent;
+}
+
+function squareRoot(n) {
+  if (!Number.isFinite(n)) {
+    throw new TypeError("The value must be a finite number.");
+  }
+  if (n < 0) {
+    throw new RangeError("Cannot calculate the square root of a negative number.");
+  }
+  return Math.sqrt(n);
+}
+
 function calculate(a, operator, b) {
   switch (operator) {
     case "+":
@@ -56,43 +82,85 @@ function calculate(a, operator, b) {
     case "divide":
     case "division":
       return division(a, b);
+    case "%":
+    case "mod":
+    case "modulo":
+      return modulo(a, b);
+    case "^":
+    case "**":
+    case "pow":
+    case "power":
+      return power(a, b);
+    case "sqrt":
+    case "square-root":
+    case "squareroot":
+    case "square root":
+      return squareRoot(a);
     default:
       throw new Error(
-        "Unsupported operation. Use addition (+), subtraction (-), multiplication (* or x), or division (/).",
+        "Unsupported operation. Use addition (+), subtraction (-), multiplication (* or x), division (/), modulo (%), power (^ or **), or square root (sqrt).",
       );
   }
 }
 
 function parseArguments(args) {
   if (args[0] === "--operation" || args[0] === "-o") {
-    if (args.length < 4) {
+    const operation = args[1]?.toLowerCase();
+    const isSquareRoot = ["sqrt", "square-root", "squareroot", "square root"].includes(
+      operation,
+    );
+    const requiredLength = isSquareRoot ? 3 : 4;
+
+    if (args.length < requiredLength) {
       throw new Error(
         "Usage: node src/calculator.js <number> <operator> <number>\n" +
-          "   or: node src/calculator.js --operation <operation> <number> <number>",
+          "   or: node src/calculator.js --operation <operation> <number> [<number>]",
       );
     }
 
     const a = Number(args[2]);
-    const b = Number(args[3]);
-    if (!Number.isFinite(a) || !Number.isFinite(b)) {
+    if (!Number.isFinite(a)) {
       throw new TypeError("Both operands must be finite numbers.");
     }
 
-    return { a, operation: args[1], b };
+    if (isSquareRoot) {
+      return { a, operation, b: undefined };
+    }
+
+    const b = Number(args[3]);
+    if (!Number.isFinite(b)) {
+      throw new TypeError("Operands must be finite numbers.");
+    }
+
+    return { a, operation, b };
   }
 
-  if (args.length < 3) {
+  const operation = args[1]?.toLowerCase();
+  const isSquareRoot = ["sqrt", "square-root", "squareroot", "square root"].includes(
+    operation,
+  );
+  const requiredLength = isSquareRoot ? 2 : 3;
+
+  if (args.length < requiredLength) {
     throw new Error(
       "Usage: node src/calculator.js <number> <operator> <number>\n" +
-        "   or: node src/calculator.js --operation <operation> <number> <number>",
+        "   or: node src/calculator.js --operation <operation> <number> [<number>]",
     );
   }
 
-  const [first, operation, second] = args;
+  const [first, , second] = args;
   const a = Number(first);
-  const b = Number(second);
 
-  if (!Number.isFinite(a) || !Number.isFinite(b)) {
+  if (!Number.isFinite(a)) {
+    throw new TypeError("Both operands must be finite numbers.");
+  }
+
+  if (isSquareRoot) {
+    return { a, operation, b: undefined };
+  }
+
+  const b = Number(second);
+  if (!Number.isFinite(b)) {
     throw new TypeError("Both operands must be finite numbers.");
   }
 
@@ -118,6 +186,9 @@ module.exports = {
   subtraction,
   multiplication,
   division,
+  modulo,
+  power,
+  squareRoot,
   calculate,
   parseArguments,
 };

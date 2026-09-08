@@ -6,6 +6,9 @@ const {
   subtraction,
   multiplication,
   division,
+  modulo,
+  power,
+  squareRoot,
   calculate,
   parseArguments,
 } = require("../calculator");
@@ -43,6 +46,30 @@ test("division handles decimal results", () => {
   assert.equal(division(7, 2), 3.5);
 });
 
+test("modulo returns the remainder", () => {
+  assert.equal(calculate(10, "%", 3), 1);
+});
+
+test("modulo matches the extended example: 5 % 2 = 1", () => {
+  assert.equal(modulo(5, 2), 1);
+});
+
+test("power raises a base to an exponent", () => {
+  assert.equal(calculate(2, "^", 8), 256);
+});
+
+test("power matches the extended example: 2 ^ 3 = 8", () => {
+  assert.equal(power(2, 3), 8);
+});
+
+test("square root returns the positive square root", () => {
+  assert.equal(calculate(81, "sqrt"), 9);
+});
+
+test("square root matches the extended example: sqrt(16) = 4", () => {
+  assert.equal(squareRoot(16), 4);
+});
+
 test("division by zero throws a clear error", () => {
   assert.throws(() => division(10, 0), {
     name: "RangeError",
@@ -50,8 +77,32 @@ test("division by zero throws a clear error", () => {
   });
 });
 
+test("modulo by zero throws a clear error", () => {
+  assert.throws(() => calculate(10, "modulo", 0), {
+    name: "RangeError",
+    message: "Cannot calculate a modulo zero.",
+  });
+});
+
+test("square root of a negative number throws a clear error", () => {
+  assert.throws(() => calculate(-1, "square-root"), {
+    name: "RangeError",
+    message: "Cannot calculate the square root of a negative number.",
+  });
+});
+
+test("power handles zero and negative exponents", () => {
+  assert.equal(power(0, 5), 0);
+  assert.equal(power(2, -2), 0.25);
+});
+
+test("square root handles zero and decimal values", () => {
+  assert.equal(squareRoot(0), 0);
+  assert.equal(squareRoot(0.25), 0.5);
+});
+
 test("operations reject non-finite operands", () => {
-  for (const operation of [addition, subtraction, multiplication, division]) {
+  for (const operation of [addition, subtraction, multiplication, division, modulo, power]) {
     assert.throws(() => operation(Number.NaN, 1), {
       name: "TypeError",
       message: "Both operands must be finite numbers.",
@@ -61,6 +112,11 @@ test("operations reject non-finite operands", () => {
       message: "Both operands must be finite numbers.",
     });
   }
+
+  assert.throws(() => squareRoot(Number.NaN), {
+    name: "TypeError",
+    message: "The value must be a finite number.",
+  });
 });
 
 test("calculate supports symbols and operation names", () => {
@@ -71,7 +127,7 @@ test("calculate supports symbols and operation names", () => {
 });
 
 test("calculate rejects unsupported operations", () => {
-  assert.throws(() => calculate(2, "%", 3), {
+  assert.throws(() => calculate(2, "&", 3), {
     name: "Error",
     message: /Unsupported operation/,
   });
